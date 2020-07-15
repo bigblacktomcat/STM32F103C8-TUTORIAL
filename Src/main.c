@@ -1,9 +1,19 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
+  * @author         : Andrei Cherny
   * @file           : main.c
-  * @brief          : Main program body
+  * @brief          : Test STM32F103C8 program body
   ******************************************************************************
+  * @details
+  * Назначение программы:
+  * С частотой 10 кГц, по таймеру, программа опрашивает один канал ADC
+  * Результаты измерений помещаются в буфер с использованием DMA
+  * По заполнению буфера (100 слов), вычисляется среднее значение за 10 мс
+  * Полученное среднее значение выводится PWM на один из выводов.
+  * Вычисляется среднее значение измерений за 1с и выводится через USB, на VCP в текстовом виде
+  * Это же среднее значение выводится через SWO (по отладке) в среду Keil uVision.
+  * 
   * @attention
   *
   * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
@@ -128,16 +138,15 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */	
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)bufferADC, DMA_BUFF_SIZE); // запускаем ADC
-	
-	HAL_TIM_Base_Start(&htim3); // пускаем таймер ADC
-	
-	HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); // запускаем ШИМ
-	sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t*)bufferADC, DMA_BUFF_SIZE); // запускаем ADC
+  HAL_TIM_Base_Start(&htim3); // пускаем таймер ADC
+  sConfigOC.OCMode = TIM_OCMODE_PWM1; // настраиваем ШИМ
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
   HAL_TIM_PWM_ConfigChannel(&htim4, &sConfigOC, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1); // запускаем ШИМ
+	
 	 /* USER CODE END 2 */
 
   /* Infinite loop */
