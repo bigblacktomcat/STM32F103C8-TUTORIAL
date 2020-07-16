@@ -13,13 +13,21 @@
   * Полученное среднее значение выводится PWM на один из выводов.
   * Вычисляется среднее значение измерений за 1с и выводится через USB, на VCP в текстовом виде
   * Это же среднее значение выводится через SWO (по отладке) в среду Keil uVision.
-  * 
+  * Благодаря STM32CubeMX все делается достаточно просто. Большая часть программирования выполненна автоматической средой. 
+  * Ручной код получается очень компактным и весь сосредоточен в файле main.c .
+  * Принцип работы платы очень прост. На вход ADC1 IN1 (PA1, pin11) поступает измеряемое напряжение. С помощью таймера TIM3 channel 4 
+  * организован циклический опрос ADC1 IN1 с частотой 10 кГц и загрузкой измеренных значений с помощью DMA1 в буфер. По заполнению буфера 
+  * вызывается HAL_ADC_ConvCpltCallback() и переводит переменную convCompleted в True. 
+  * После чего находим среднее арифметическое bufferADC за 10 мс.
+  * Полученное значение мы выводим через pin PB6 используя PWM реализованный на таймере TIM4 channel 1.
+  * Проведя 100 циклов по 10 мс мы находим среднее значение за 1с мы выводим результат через USB VCP в текстовом виде, в формате типа "1500 mV \r". 
+  * Вывод результата мы дублируем в окно отладчика Keil через SWD.
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  * <h2><center>&copy; Copyright (c) 2020 Andrei Cherny.
   * All rights reserved.</center></h2>
   *
-  * This software component is licensed by ST under Ultimate Liberty license
+  * This software component is licensed by Andrei Cherny under Ultimate Liberty license
   * SLA0044, the "License"; You may not use this file except in compliance with
   * the License. You may obtain a copy of the License at:
   *                             www.st.com/SLA0044
@@ -103,7 +111,7 @@ while (ITM_Port32(0) == 0);
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
+  * @brief   Точка входа в программу
   * @retval int
   */
 int main(void)
@@ -138,8 +146,20 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */	
+/*!
+Настраиваем ассоциированный с ADC1 канал DMA1
+@param[out] bufferADC Целевая область памяти для DMA1
+@param[in] hadc1 Дескриптор ADC1
+@param[in] DMA_BUFF_SIZE Количество измерений и размер буффера
+*/	
   HAL_ADC_Start_DMA(&hadc1, (uint32_t*)bufferADC, DMA_BUFF_SIZE); // запускаем ADC
   HAL_TIM_Base_Start(&htim3); // пускаем таймер ADC
+/*!
+Настраиваем ассоциированный с PWM канал 1 на таймере 4
+выходной сигнал имеем на ножке PB6
+@param[in] sConfigOC.Pulse Уровень выходного сигнала
+@param[in] htim4 Дескриптор таймера TIM4
+*/	
   sConfigOC.OCMode = TIM_OCMODE_PWM1; // настраиваем ШИМ
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -156,8 +176,13 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		// в задании не оговаривалась особая точность
-		// усредняем средние за 1с и выводим через USB-VPC
+/*! в задании не оговаривалась особая точность временных интервалов,
+1 с отслеживаем как последовательность 10 мс интервалов
+усредняем 100 10мс средних значения (1с) и выводим через USB-VPC
+@param  sum100point аккумулятор и среднее значение ADC1 за 10 мс
+@param  value100    среднее значение ADC1 за 10 мс в мВ
+@param  summ        аккумулятор и среднее значение ADC1 в мВ за 1 с
+*/
 		sum100point =0;
 		summ = 0;
 		for (int j=0; j++<100;){
