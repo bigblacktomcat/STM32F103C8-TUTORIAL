@@ -138,14 +138,23 @@ int main(void)
 
   /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
+  /*!
+  Инициализируем всю периферию используя сгенерированные STM32CubeMX коды
+  MX_GPIO_Init()       - выходы кристала    
+  MX_DMA_Init()        - канал DMA
+  MX_USB_DEVICE_Init() - USB
+  MX_ADC1_Init()       - АЦП
+  MX_TIM3_Init()       - Таймер 3
+  MX_TIM4_Init()       - Таймер 4
+  */
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
-  /* USER CODE BEGIN 2 */	
+*/
+/* USER CODE BEGIN 2 */	
 /*!
 Настраиваем ассоциированный с ADC1 канал DMA1
 @param[out] bufferADC Целевая область памяти для DMA1
