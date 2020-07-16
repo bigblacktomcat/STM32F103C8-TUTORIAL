@@ -3,6 +3,7 @@ ADC DMA 10 kHz tutorial sample with USB and PWM output
 This is simple example of code for STM32F103C8
 My program uses ADC via DMA. One channel with 10 kHz sampling due to timer.
 Each 10 mc average value from ADC appear with PWM. And each 1c via USB.
+
 Небольшая учебная программа для тестовой платы на STM32F103C8T6.
 Назначение программы: 
 1. С частотой 10 кГц, по таймеру, программа опрашивает один канал ADC 
